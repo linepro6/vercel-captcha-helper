@@ -15,24 +15,18 @@ export default async function handler(req: Request) {
     const url = new URL(req.url);
     const user = String(url.searchParams.get("userid"))
     let data = await kv.get(user);
-    let status = 200;
     const start = Date.now();
-    while (!data && Date.now() - start < 28 * 1000) {
+    while (!data && Date.now() - start < 24 * 1000) {
         await sleep(1000);
         data = await kv.get(user);
     }
     if (data) {
         await kv.del(user);
-    } else {
-        data = {
-            error: "timed out"
-        }
-        status = 503
     }
     return new Response(
-        JSON.stringify(data),
+        data ? JSON.stringify(data) : null,
         {
-            status: status,
+            status: data ? 200 : 204,
             headers: {
                 'content-type': 'application/json',
             },
